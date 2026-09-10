@@ -353,7 +353,36 @@ function useSavedFood(id) {
   displayFoods();
 }
 
-function deleteFood(id) {
+function editFood(id) {
+
+  let foods = getTodayFoods();
+
+  let food = foods.find(function(item) {
+    return item.id === id;
+  });
+
+  if (!food) return;
+
+  let newName = prompt("Food name:", food.name);
+
+  if (!newName) return;
+
+  let newGrams = parseFloat(
+    prompt("Carbohydrate grams:", food.grams)
+  );
+
+  if (isNaN(newGrams) || newGrams < 0) {
+    alert("Please enter a valid number of grams.");
+    return;
+  }
+
+  food.name = newName.trim();
+  food.grams = newGrams;
+  food.choices = newGrams / GRAMS_PER_CHOICE;
+
+  saveFoods();
+  displayFoods();
+}
 
   let foods = getTodayFoods();
 
@@ -412,6 +441,10 @@ function displayFoods() {
           =
           ${food.choices.toFixed(2)} carb choices
           <br>
+          <button onclick="editFood(${food.id})">
+            Edit
+            
+          </button>
           <button onclick="deleteFood(${food.id})">
             Delete
           </button>
