@@ -151,7 +151,7 @@ input, select {
 
   <button onclick="addFoodFromForm()">Add Food</button>
 </div>
-  <button onclick="addFood()">+ Add Food</button>
+  <button onclick="addFoodFromForm()">+ Add Food</button>
   <button onclick="saveFoodForLater()">+ Save New Food</button>
 </div>
 
@@ -257,6 +257,41 @@ function addFoodFromForm() {
     choices.toFixed(2) +
     " carb choices"
   );
+}
+
+function addFoodFromForm() {
+
+  let meal = document.getElementById("mealInput").value;
+  let name = document.getElementById("foodInput").value.trim();
+  let grams = parseFloat(document.getElementById("gramsInput").value);
+
+  if (!name) {
+    alert("Please enter a food name.");
+    return;
+  }
+
+  if (isNaN(grams) || grams < 0) {
+    alert("Please enter the carbohydrate grams.");
+    return;
+  }
+
+  let choices = grams / GRAMS_PER_CHOICE;
+  let foods = getTodayFoods();
+
+  foods.push({
+    id: Date.now(),
+    meal: meal,
+    name: name,
+    grams: grams,
+    choices: choices
+  });
+
+  saveFoods();
+  displayFoods();
+
+  document.getElementById("foodInput").value = "";
+  document.getElementById("gramsInput").value = "";
+
 }
 
 function saveFoodForLater() {
@@ -383,6 +418,8 @@ function editFood(id) {
   saveFoods();
   displayFoods();
 }
+
+function deleteFood(id) {
 
   let foods = getTodayFoods();
 
