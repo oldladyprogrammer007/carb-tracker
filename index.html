@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carb Tracker</title>
+
+<style>
+    * {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: #f2f2f7;
+  color: #1c1c1e;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: white;
+  padding: 18px;
+  margin: 14px 0;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+button {
+  font-size: 16px;
+  padding: 12px 16px;
+  margin: 5px 3px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+input, select {
+  font-size: 17px;
+  padding: 11px;
+  margin: 5px 0;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+.food-row {
+  border-top: 1px solid #ddd;
+  padding: 12px 0;
+}
+
+.total {
+  font-size: 19px;
+  font-weight: bold;
+}
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  margin: 12px 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+button {
+  padding: 10px 14px;
+  margin: 5px 3px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+input, select {
+  padding: 9px;
+  margin: 5px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.food-row {
+  border-top: 1px solid #ddd;
+  padding: 10px 0;
+}
+
+.total {
+  font-size: 18px;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Carb Tracker</h1>
+
+<div class="card">
+  <label for="datePicker"><strong>Date:</strong></label><br>
+  <input type="date" id="datePicker">
+</div>
+
+<div class="card">
+    <div class="card">
+  <h2>Add Food</h2>
+
+  <label>Meal:</label><br>
+  <select id="mealInput">
+    <option>Breakfast</option>
+    <option>Lunch</option>
+    <option>Dinner</option>
+    <option>Snack</option>
+  </select>
+
+  <br>
+
+  <label>Food:</label><br>
+  <input type="text" id="foodInput" placeholder="Food name">
+
+  <br>
+
+  <label>Carbohydrate grams:</label><br>
+  <input type="number" id="gramsInput" placeholder="Example: 30">
+
+  <br>
+
+  <button onclick="addFoodFromForm()">Add Food</button>
+</div>
+  <button onclick="addFood()">+ Add Food</button>
+  <button onclick="saveFoodForLater()">+ Save New Food</button>
+</div>
+
+<div class="card">
+  <h2>Daily Totals</h2>
+  <div id="dailyTotals"></div>
+</div>
+
+<div id="foodList"></div>
+
+<div class="card">
+  <h2>Saved Foods</h2>
+  <div id="savedFoods"></div>
+</div>
+
+</div>
+
+<script>
+
+const GRAMS_PER_CHOICE = 15;
+
+const mealNames = [
+  "Breakfast",
+  "Lunch",
+  "Dinner",
+  "Snack"
+];
+
+let selectedDate =
+  localStorage.getItem("carbTrackerSelectedDate") ||
+  new Date().toISOString().split("T")[0];
+
+let foodsByDate =
+  JSON.parse(localStorage.getItem("carbTrackerFoodsByDate") || "{}");
+
+let savedFoods =
+  JSON.parse(localStorage.getItem("carbTrackerSavedFoods") || "[]");
+
+const datePicker = document.getElementById("datePicker");
+
+datePicker.value = selectedDate;
+
+datePicker.addEventListener("change", function() {
+  selectedDate = this.value;
+  localStorage.setItem("carbTrackerSelectedDate", selectedDate);
+  displayFoods();
+});
+
+function saveFoods() {
+  localStorage.setItem(
+    "carbTrackerFoodsByDate",
+    JSON.stringify(foodsByDate)
+  );
+}
+
+function getTodayFoods() {
+  if (!foodsByDate[selectedDate]) {
+    foodsByDate[selectedDate] = [];
+  }
+
+  return foodsByDate[selectedDate];
+}
+
+function addFoodFromForm() {
+
+  let meal = document.getElementById("mealInput").value;
+  let name = document.getElementById("foodInput").value.trim();
+  let grams = parseFloat(document.getElementById("gramsInput").value);
+
+  if (!name) {
+    alert("Please enter a food name.");
+    return;
+  }
+
+  if (isNaN(grams) || grams < 0) {
+    alert("Please enter the carbohydrate grams.");
+    return;
+  }
+
+  let choices = grams / GRAMS_PER_CHOICE;
+
+  let foods = getTodayFoods();
+
+  foods.push({
+    id: Date.now(),
+    meal: meal,
+    name: name,
+    grams: grams,
+    choices: choices
+  });
+
+  saveFoods();
+  displayFoods();
+
+  document.getElementById("foodInput").value = "";
+  document.getElementById("gramsInput").value = "";
+
+  alert(
+    name +
+    " added!\n" +
+    grams.toFixed(1) +
+    " g = " +
+    choices.toFixed(2) +
+    " carb choices"
+  );
+}
+
+function saveFoodForLater() {
+
+  let name = prompt("Food name:");
+
+  if (!name) return;
+
+  let amountType = prompt(
+    "Do you know the:\n1 = Grams\n2 = Carb Choices"
+  );
+
+  if (amountType !== "1" && amountType !== "2") {
+    alert("Please choose 1 or 2.");
+    return;
+  }
+
+  let amount = parseFloat(
+    prompt(
+      amountType === "1"
+        ? "Enter grams of carbohydrate:"
+        : "Enter carb choices:"
+    )
+  );
+
+  if (isNaN(amount)) {
+    alert("Please enter a number.");
+    return;
+  }
+
+  let grams;
+  let choices;
+
+  if (amountType === "1") {
+    grams = amount;
+    choices = grams / GRAMS_PER_CHOICE;
+  } else {
+    choices = amount;
+    grams = choices * GRAMS_PER_CHOICE;
+  }
+
+  savedFoods.push({
+    id: Date.now(),
+    name: name,
+    grams: grams,
+    choices: choices
+  });
+
+  localStorage.setItem(
+    "carbTrackerSavedFoods",
+    JSON.stringify(savedFoods)
+  );
+
+  displaySavedFoods();
+
+  alert(
+    name +
+    " saved!\n" +
+    grams.toFixed(1) +
+    " g = " +
+    choices.toFixed(2) +
+    " carb choices"
+  );
+}
+
+function useSavedFood(id) {
+
+  let food = savedFoods.find(function(item) {
+    return item.id === id;
+  });
+
+  if (!food) return;
+
+  let meal = prompt(
+    "Add to:\n1 = Breakfast\n2 = Lunch\n3 = Dinner\n4 = Snack"
+  );
+
+  if (!meal || meal < 1 || meal > 4) {
+    alert("Please choose 1, 2, 3, or 4.");
+    return;
+  }
+
+  let foods = getTodayFoods();
+
+  foods.push({
+    id: Date.now(),
+    meal: mealNames[meal - 1],
+    name: food.name,
+    grams: food.grams,
+    choices: food.choices
+  });
+
+  saveFoods();
+  displayFoods();
+}
+
+function deleteFood(id) {
+
+  let foods = getTodayFoods();
+
+  foodsByDate[selectedDate] =
+    foods.filter(function(food) {
+      return food.id !== id;
+    });
+
+  saveFoods();
+  displayFoods();
+}
+
+function deleteSavedFood(id) {
+
+  savedFoods =
+    savedFoods.filter(function(food) {
+      return food.id !== id;
+    });
+
+  localStorage.setItem(
+    "carbTrackerSavedFoods",
+    JSON.stringify(savedFoods)
+  );
+
+  displaySavedFoods();
+}
+
+function displayFoods() {
+
+  let foods = getTodayFoods();
+
+  let html = "";
+
+  mealNames.forEach(function(meal) {
+
+    let mealFoods =
+      foods.filter(function(food) {
+        return food.meal === meal;
+      });
+
+    html += `
+      <div class="card">
+        <h2>${meal}</h2>
+    `;
+
+    if (mealFoods.length === 0) {
+      html += "<p>No foods entered.</p>";
+    }
+
+    mealFoods.forEach(function(food) {
+
+      html += `
+        <div class="food-row">
+          <strong>${food.name}</strong><br>
+          ${food.grams.toFixed(1)} g
+          =
+          ${food.choices.toFixed(2)} carb choices
+          <br>
+          <button onclick="deleteFood(${food.id})">
+            Delete
+          </button>
+        </div>
+      `;
+    });
+
+    html += "</div>";
+  });
+
+  document.getElementById("foodList").innerHTML = html;
+
+  let totalGrams = foods.reduce(
+    function(total, food) {
+      return total + food.grams;
+    },
+    0
+  );
+
+  let totalChoices = foods.reduce(
+    function(total, food) {
+      return total + food.choices;
+    },
+    0
+  );
+
+  document.getElementById("dailyTotals").innerHTML = `
+    Total Carbohydrate:
+    <strong>${totalGrams.toFixed(1)} g</strong>
+    <br>
+    Total Carb Choices:
+    <strong>${totalChoices.toFixed(2)}</strong>
+  `;
+}
+
+function displaySavedFoods() {
+
+  let html = "";
+
+  if (savedFoods.length === 0) {
+    html = "<p>No saved foods yet.</p>";
+  }
+
+  savedFoods.forEach(function(food) {
+
+    html += `
+      <div class="food-row">
+        <strong>${food.name}</strong><br>
+        ${food.grams.toFixed(1)} g
+        =
+        ${food.choices.toFixed(2)} carb choices
+        <br>
+
+        <button onclick="useSavedFood(${food.id})">
+          Add to Meal
+        </button>
+
+        <button onclick="deleteSavedFood(${food.id})">
+          Delete Saved Food
+        </button>
+      </div>
+    `;
+  });
+
+  document.getElementById("savedFoods").innerHTML = html;
+}
+
+displayFoods();
+displaySavedFoods();
+
+</script>
+
+</body>
+</html>
