@@ -401,7 +401,10 @@ function editFood(id) {
   let newName = prompt("Food name:", food.name);
 
   if (!newName) return;
-
+let newMeal = prompt(
+  "Meal (Breakfast, Lunch, Dinner, or Snack):",
+  food.meal
+);
   let newGrams = parseFloat(
     prompt("Carbohydrate grams:", food.grams)
   );
@@ -410,7 +413,7 @@ function editFood(id) {
     alert("Please enter a valid number of grams.");
     return;
   }
-
+  food.meal = newMeal;
   food.name = newName.trim();
   food.grams = newGrams;
   food.choices = newGrams / GRAMS_PER_CHOICE;
